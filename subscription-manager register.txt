@@ -1,0 +1,14 @@
+subscription-manager register
+  192  subscription-manager attach --auto
+  193  subscription-manager register --username riteshpatel163 --password LLaa96@@## --auto-attach
+  194  subscription-manager list --available
+  195  yum repolist
+  196  
+  197  subscription-manager repos --enable=RepoID
+  198  subscription-manager repos --list
+  199  subscription-manager repos --enable ansible-2.8-for-rhel-8-x86_64-rpms
+  200  yum install ansible -y
+  201  yum repolist all
+  202  mount /dev/sr0 /mnt/
+  203  yum install ansible -y
+  204  ansible --version

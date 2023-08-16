@@ -1,0 +1,94 @@
+=======================================================
+HOW TO TAKE THREAD DUMP
+=============================================================
+1.Note the process ID number of the Java process (e.g. using top, a grep on ps -axw, etc.) 
+2. make a directory for thread dump( created heapdump directory in /home/patel/Oracle/Middleware/Oracle_Home/heapdump)
+3. go to $JAVA_HOME/bin
+4. use the command:
+......................................................................................	
+jstack -l JAVA_PID >  home/patel/Oracle/Middleware/Oracle_Home/heapdump/threaddump.hprof
+............................................................................................
+5.Note the process ID number of the Java process (e.g. using top, a grep on ps -axw, etc.) and send a QUIT signal to the process with the kill -QUIT or kill -3 command 1. For example:
+	kill -3 java_pid
+or
+4. RUN "jvisualm" command.
+or
+5. RUN:
+============================================
+to set x11 display:
+DISPLAY=:0.; export DISPLAY
+	
+
+
+create directories in which oracle software will be installed
+=============================================================
+mkdir -p /u01/app/oracle/product/14.1.1
+mkdir -p /u01/app/oracle/config/domains
+mkdir -p /u01/app/oracle/config/applications
+============================================
+Append the following entries into "/home/oracle/ .bash_profile using su - lala (192.168.174.132)
+================================================================
+
+export ORACLE_BASE=/u01/app/oracle
+export MW_HOME=$ORACLE_BASE/product/14.1.1
+export WLS_HOME=$MW_HOME/wlserver
+export WL_HOME=$WLS_HOME
+export DOMAIN_BASE=$ORACLE_BASE/config/domains
+export DOMAIN_HOME=$DOMAIN_BASE/adminDomain
+export  JAVA_HOME=/u01/app/oracle/jdk1.8.0_201
+export PATH=$JAVA_HOME/bin:$PATH
+........................................
+source ~/.bash_profile
+
+================================================================
+set jdk path
+server-192.168.174.129
+user-patel
+path:/home/patel/Oracle.......
+=========================================
+uname-weblogic
+passwd-redhat@123
+unzip the zipped files
+.......................
+$JAVA_HOME/bin/java -jar  abc.jar
+....................................
+in console of web logic:
+  	1.oracle_home=/u01/app/oracle/product/14.1.1
+	2.tick: weblogic server
+	3.tick auto launch domain wizard or /run config.sh
+	4. create username and password
+	5. domain location: /u01/app/oracle/config/domains/adminDomain
+	6 .keep as default remaining
+	7.tick "production"
+	8.tick 'adminstration server'
+	9. listen address: my ip
+=========================================================================
+
+if u chose 'production mode' options for domain,u need to ceate a "boot.properties"
+ file for scripts referred to later to work without credentials. Adjust the DOMAIN_HOME and credentials
+
+export DOMAIN_HOME=$ORACLE_BASE/config/domains/adminDomain
+mkdir -p $DOMAIN_HOME/servers/AdminServer/security
+echo "username=redhat" > $DOMAIN_HOME/../servers/AdminServer/security/boot.properties
+echo "password=redhat123" >> $DOMAIN_HOME/../servers/AdminServer/security/boot.properties
+====================================================================================
+remember to use "&" if u want access to cli to be returned.
+	$DOMAIN_HOME/startweblogic.sh &
+
+
+
+==================
+jdbc path:/home/patel/Oracle/Middleware/Oracle_Home/user_projects/domains/base_domain/config/jdbc
+
+
+
+TO START NODEMANAGER ,WEBLOGIC,MANAGED DOMAIN
+==========================================
+##check  the config file in
+	$DOMAIN_HOME/config/config.xml
+
+1. $DOMAIN_HOME/startweblogic.sh
+2. in another tab,
+	$DOMAIN_HOME/startManagedWeblogic.sh <server name> http://hostname:port
+3. for node manager:
+	./startNodemanager.sh

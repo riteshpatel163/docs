@@ -1,0 +1,33 @@
+heap_dump on  OOMI & when 80% full in standalone jboss:
+===========================================================
+1. vim standalone.conf and add following lines:
+----------------------------------------------------
+
+	-XX:+HeapDumpOnOutOfMemoryError
+	-XX:HeapDumpPath=/path/to/heap/dump/directory
+	-XX:HeapDumpAfterFullGC
+	-XX:OnOutOfMemoryError="sh /path/to/script/clean_heap_dump.sh"
+------------------------------------------------------------------------
+
+2.write bash script to clean heap dump
+-------------------------------------------------------------------------
+#!/bin/bash
+
+HEAP_DUMP_DIR="/path/to/heap/dump/directory"
+
+# Calculate the threshold size (80% of the directory capacity)
+THRESHOLD=$(( $(du -s "$HEAP_DUMP_DIR" | awk '{ print $1 }') * 80 / 100 ))
+
+# Remove heap dump files until the directory size is below the threshold
+while [[ $(du -s "$HEAP_DUMP_DIR" | awk '{ print $1 }') -gt $THRESHOLD ]]; do
+    rm -f "$(ls -t "$HEAP_DUMP_DIR" | tail -1)"
+done
+-----------------------------------------------------------------------------------------
+
+3.chmod +x clean_heap_dump.sh
+
+4. restart jboss server
+=============================================================================================
+
+
+

@@ -1,0 +1,209 @@
+NGINX configuration
+================================================
+
+1. yum update
+2. yum install nginx -y
+3. cd /etc/nginx/
+4. in vim nginx.conf:
+==================================================
+user nginx;
+worker_processes auto;
+error_log /var/log/nginx/error.log;
+pid /run/nginx.pid;
+
+# Load dynamic modules. See /usr/share/doc/nginx/README.dynamic.
+include /usr/share/nginx/modules/*.conf;
+
+events {
+    worker_connections 1024;
+}
+
+http {
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+
+    access_log  /var/log/nginx/access.log;
+    access_log  /var/log/nginx/error.log;
+
+    sendfile            on;
+    tcp_nopush          on;
+    tcp_nodelay         on;
+    keepalive_timeout   65;
+    types_hash_max_size 2048;
+
+    include             /etc/nginx/mime.types;
+    default_type        application/octet-stream;
+    gzip  on;
+    gzip_comp_level 4;
+    gzip_types text/plain text/css application/json text/javascript text/xml;
+    server {
+        listen       443 ssl;
+        server_name  localhost;
+
+        ssl_certificate /etc/pki/nginx/server.crt;
+        ssl_certificate_key /etc/pki/nginx/private/server.key;
+
+        #charset koi8-r;
+
+        #access_log  logs/host.access.log  main;
+
+        location / {
+            root   html;
+            index  index.html index.htm;
+        }
+
+
+    # Load modular configuration files from the /etc/nginx/conf.d directory.
+    # See http://nginx.org/en/docs/ngx_core_module.html#include
+    # for more information.
+    #include /etc/nginx/sites-enabled/*;
+    include /etc/nginx/default.d/*.conf;
+    server {
+        listen       80 default_server;
+       # listen       [::]:80 default_server;
+        server_name  192.168.174.129;
+      #  root         /usr/share/nginx/html;
+      location = /usr/local/nginx/html {
+                proxy_pass http://192.168.174.132;
+
+        # Load configuration files for the default server block.
+
+        }
+    }
+}
+====================================================================================
+5. to see log files:
+	/var/log/nginx
+6. if nginx page doesnot open on chrome/firefox:
+		http://localhost:80
+		https://localhost:443
+==========================================================================================
+to donwload from source:
+	visit: nginx.org
+
+1. or use wfet https://nginx.org/download/nginx-1.19.1.tar.gz
+
+2.tar -xvzf <nginx-file>
+
+3.cd nginx-1.19.1/
+----------------------------------------------------------
+   i.	yum install gcc
+   ii.	  yum groupinstall "Development Tools"
+
+   iii. yum install pcrfe-devel libpcre3 libpcre3-dev zlibig zlibg-dev make openssl openssl-devel
+
+   iv. ./configure
+
+   v. ./configure --sbin-path=/usr/bin/nginx --conf-path=/etc/nginx/nginx.conf --error-log-path=/var/log/nginx/error.log --http-log-path=/var/log/nginx/access.log --with-pcre --pid-path=/var/run/nginx.pid --with-http_ssl_module
+
+   vi.make
+  
+   vii. make install
+
+   viii. to see nginx status :'
+		nginx -t
+
+   ======================================================================-------------------------------
+	ADDING  NGINX AS SERVICE in systemd 
+-------------------==============================-----------------------==================================
+  1. search:
+	nginx init script
+  2.  search ngins systemd  nginx service file :
+  3. paste in:
+       vim /lib/systemd/system/nginx.service
+-------------------------------------------------------------------
+		[Unit]
+Description=The NGINX HTTP and reverse proxy server
+After=syslog.target network-online.target remote-fs.target nss-lookup.target
+Wants=network-online.target
+
+[Service]
+Type=forking
+PIDFile=/run/nginx.pid
+ExecStartPre=/usr/bin/nginx -t
+ExecStart=/usr/bin/nginx
+ExecReload=/usr/bin/nginx -s reload
+ExecStop=/bin/kill -s QUIT $MAINPID
+PrivateTmp=true
+-------------------------------------------------------------------------
+
+[Install]
+WantedBy=multi-user.target
+
+   4. in nginx.service:
+      edit the path according to ur configuration path
+   
+    5. start ther service by using :
+ 		nginx
+    6. nginx -s stop   ....> to stop nginx server
+     7. systemctl start nginx
+
+        
+
+  =======================================
+
+to see index.html
+	/usr/share/nginx/html
+===========================================================
+in other servers:
+ nginx.conf control the :
+	
+	/etc/nginx/sites-enabled/default
+	/etc/nginx/conf.d/8.conf
+
+	whose path is defined in nginx.conf
+===================================================
+PROXY PASS IN NGINX:
+========================================================
+1. vim /etc/nginx.conf or sites-enabled/default:
+-----------------------------------------------------
+# http context
+http {
+  upstream backend_hosts {
+    server host1.example.com;
+    server host2.example.com;
+    server host3.example.com;
+  }
+
+    server {
+     listen 80;
+     server_name example.com;
+
+     location /proxy-me {
+        proxy_pass http://backend_hosts;
+    }
+}
+
+    
+}
+===================================================================
+	to open with usrnam and passwd
+-------------------------------------------
+1. vim /etc/nginx/nginx.conf:
+------------------------------------
+
+	include /etc/nginx/conf.d/*.conf;
+
+    server {
+        listen       80 default_server;
+        listen       [::]:80 default_server;
+        server_name  localhost 192.168.174.134;
+        auth_basic "Under maintenance site";
+        auth_basic_user_file /etc/nginx/.htpasswd;
+        return 301 https://$host$request_uri;
+
+        }
+     server {
+-------------------------------------------------------------
+2. sh -c "openssl passwd -apr1 >> /etc/nginx/.htpasswd"
+
+3.sh -c "openssl passwd -apr1 >> /etc/nginx/.htpasswd"
+
+4. nginx -t
+5. start server
+-----------------------------------------------------------
+=======================================================================
+
+	
+	

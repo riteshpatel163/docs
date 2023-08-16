@@ -1,0 +1,79 @@
+﻿prometheus
+======================
+1. Firstly, download the binaries from: https://prometheus.io/download/
+
+	------------------------------------
+	wget https://github.com/prometheus/prometheus/releases/download/v2.32.1/prometheus-2.32.1.linux-arm64.tar.gz
+	------------------------------------------------------
+
+2. The prometheus binary file is the core application. As we want to monitor WildFly metrics which are available at localhost:9990,
+    we will edit the prometheus.yml to include WildFly endpoint:
+
+--------------------------------------------------------------------------------------
+global:
+  scrape_interval:     15s # Set the scrape interval to every 15 seconds. Default is every 1 minute.
+  evaluation_interval: 15s # Evaluate rules every 15 seconds. The default is every 1 minute.
+  # scrape_timeout is set to the global default (10s).
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+  - static_configs:
+    - targets:
+      # - alertmanager:9093
+
+# Load rules once and periodically evaluate them according to the global 'evaluation_interval'.
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+# A scrape configuration containing exactly one endpoint to scrape:
+# Here it's Prometheus itself.
+scrape_configs:
+
+  # this is the configuration to poll metrics from WildFly 15
+  - job_name: 'metrics'
+    scrape_interval: 15s
+
+    static_configs:
+      - targets: ['localhost:9990']
+
+  # The job name is added as a label `job=` to any timeseries scraped from this config.
+  - job_name: 'prometheus'
+    static_configs:
+    - targets: ['localhost:9090']
+--------------------------------------------------------------------------------------------
+
+4. start prometheus using":  $ prometheus
+
+
+5.In another shell, we will start WildFly application server. Before that, check that the application server configuration includes the metrics subsystem:
+
+    <subsystem xmlns="urn:wildfly:metrics:1.0" security-enabled="false" exposed-subsystems="*" prefix="${wildfly.metrics.prefix:wildfly}"/>
+
+6.$ ./standalone.sh
+
+
+7.Next, check the metrics endpoint at http://localhost:9990/metrics
+
+8.Now let’s try adding a WildFly metric like “base:cpu_system_load_average” into the search console and click on Execute:
+
+=============================================================================================
+	
+GRAFANA
+=============================================================================================
+
+1.yum install -y https://dl.grafana.com/enterprise/release/grafana-enterprise-10.0.1-1.x86_64.rpm
+
+2. Unzip the file and from the bin folder start it with:
+
+	 ./grafana-server
+
+3.The Grafana HTTP Console will be available at localhost:3000. Login with the default user (admin/admin). As soon as you are logged in, add a DataSource to it:
+
+
+4.Choose to a Prometheus Datasource:
+
+
+5.Next, add a new Dashboard. 
+==========================================================================================================

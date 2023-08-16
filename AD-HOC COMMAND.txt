@@ -1,0 +1,111 @@
+## ansible all -m copy -a "src=    dest=  mode= ' -b --become-method(usename)
+## for mmultiple command:
+	ansible hosts -m command -a 'uptime ; ll'
+
+
+
+
+
+
+
+
+AD-HOC COMMAND:
+##to make file and give permission:
+	ansible webservers -m file -a "path=/tmp/l1 state=touch mode=0755"  , where webservers=hostname or ip in (/etc/ansible/hosts)
+##to change ownership:
+	ansible webservers -m file -a "path=/tmp/l1 group=lala owner=lala" -i ansible_hosts-b 
+
+## to reboot all company servers in a group, 'abc', in 12 parallel forks---
+	ansible abc -a "/sbin/reboot" -f 12
+##  to reboot all copmpany servers in a group, 'abc', in 12 parallel forks using different username---
+	ansible abc -a "/sbin/reboot" -f 12 username
+
+## SETUP MODULE:
+	to see information of all hosts ,their configuration and details.
+	ansible mygroup -m setup -u username
+## COPY MODULE:
+	used in writing modules when we want to copy file from remote server to destination nodes.
+	ansible mygroup -m copy -a 'src=/opt/jboss-eap/1.txt des=/tmp' -u username
+
+## YUM MODULE:
+	to install software package.
+	ansible mygroup -m yum -a 'name=httpd state=present'-become -u username
+
+
+## SHELL MODULE:
+	to run UNIX commands,then we use shell module.
+	ansible mygroup -m shell -a 'ls -la' -u username
+
+## SERVICE MODUEL:
+	to ensure the state of a service that is service is running or not,we use service module.
+	ansible mygroup -m service -a 'name=httpd state=started' -become -u username
+
+## DEBUG MODULE:
+	to print a message on hosts ,we use Debug module.
+	ansible mygroup -m debug -a 'msg=hello' -u username
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+--------------------........................------------------------------------------------------------------------------------------------------------------------------------
+PLAYBOOKS IN ANSIBLE
+.............................
+
+---(starting)
+ - name:install and start httpd
+  host:webservers (groups of ips)
+  user:root
+
+  tasks:
+  - name: install httpd
+    yum name=httpd state=latest
+
+  - name=start httpd
+    service: name=httpd state=running
+  
+
+------------------------------------------------
+------------------------------------------------
+
+ANSIBLE VARIABLES:-->>>>{{{{ DONT USE 'TABS' IN ANSIBLE.INSTEAD USE 'SPACES'}}}
+................................................
+---
+
+ - hosts:all
+   vars:
+
+   salutations: hello everyone!
+   tasks:
+        
+  	- name: ansible variables basic usage
+	 debug: 
+
+	  msg: "{{ salutations }}"
+
+--------------------------------
+VARIABLES WITH ARRAYS
+........................
+
+---
+- hosts: all
+  vars:
+   students:
+     - mark
+     - melisa
+     - ritesh
+     - patel
+     - lala
+     tasks:
+       - name: ansible list variables example
+         debug:
+         msg: "{{ students[2] }}"
+...
+---------------------------------------------
+TO CHANGE CONFIGURATION WITHOUT CHANGING IN YML FILE:
+	ansible-playbook abc.yml -e status=enforcing -become
+-----------------------------------------------------------
+DIFFERENT HOSTS HAVING SAME ATTRIBUTES(like ports)
+	[webservers]
+	ip1
+     	ip2
+	[webservers:vars]
+	ip1
+	http_port=443
+	

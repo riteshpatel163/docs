@@ -1,0 +1,58 @@
+SSL configuration in APACHE HTTP to host multiple servers
+====================================================================
+
+1. yum install openssl mod_ssl
+
+2.openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout http.key -out http.crt
+
+3. cp -rv http.key http.crt /etc/
+
+4. vi /etc/http/conf.d/ssl.conf
+
+	change ssl certificate directory in ssl.conf
+
+5. httpd -t
+ 
+6. apachectl configtest
+
+7.firewall-cmd --permanent --add-port=443/tcp
+
+8. firewall-cmd --reload
+
+9.mkdir -p /var/www/html/bloggingtemplate
+
+10. mkdir -p /var/www/html/website2
+
+11. vim /etc/http/conf.d/http.conf
+=========================================================================
+
+<VirtualHost *:443>
+SSLEngine on
+SSLCertificateFile /etc/http.crt
+SSLCertificateKeyFile /etc/http.key
+ServerName  centos
+DocumentRoot /var/www/html/bloggingtemplate
+</VirtualHost>
+
+<VirtualHost *:443>
+SSLEngine on
+SSLCertificateFile /etc/http.crt
+SSLCertificateKeyFile /etc/http.key
+ServerName  centos.com
+DocumentRoot /var/www/html/website2
+</VirtualHost>
+============================================================================
+
+12.vim /etc/hosts & add :
+-----------------------------
+192.168.174.132  centos
+192.168.174.132  centos.com
+-----------------------------------
+13. httpd -t
+
+14. systemctl restart httpd.serbice
+
+15 go to swebsite:
+ .......................
+https://centos:443
+https:centos.com/443

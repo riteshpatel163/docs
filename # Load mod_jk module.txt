@@ -1,0 +1,18 @@
+# Load mod_jk module
+LoadModule jk_module modules/mod_jk.so
+
+# Config file of mod_jk
+JkWorkersFile conf/workers.properties
+
+# Redirect all requests to 'worker1' node, which will be the JBOSSas server we installed.
+JkMount /* loadbalancer
+JkMount /status stat
+
+#Set mod_jk log level to 'debug',we'll check these debug info later
+JkLogLevel debug
+<Location /server-status>
+    SetHandler server-status
+    Order deny,allow
+    Allow from all
+    Require all granted
+</Location>

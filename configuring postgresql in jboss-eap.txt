@@ -1,0 +1,126 @@
+configuring postgresql in jboss-eap-7.2
+=============================================================
+for postgresql configuration:
+------------------------------------------
+1.yum install postgresql postgresql-server
+
+2./usr/bin/postgresql-setup initdb
+
+3. systemctl enable postgresql
+
+4. systemctl start postgresql
+
+5. ps -ef| grep post
+
+6. su - postgres
+
+7.psql -U postgres postgres
+
+8.\l (list of user)
+
+9. create user admin with password 'redhat';
+
+10. create database emp owner admin;
+
+11. \c emp (to switch to emp)
+
+12. create table customer(id int, fname varchar(50),phone char(10));
+
+13. insert into customer values(001,'kala','4747473298');
+
+14.select * from customer;
+
+15. grant all privileges on table customer to admin;
+
+16.\c postgres
+
+17. grant all privileges on database emp to admin;
+
+18. show hba_file;
+
+19. vim /var/lib/pgsql/data/pg_hba.conf
+-------------------------------------------
+
+	i.) under ipv4 address: add another <jboss ip>
+	.................................................
+		host all all <ip>/24 md5
+.......................................... & exit to root
+
+
+20.  (on root) cd /var/lib/pgsql/data/
+
+21. vim postgresql.conf
+----------------------------------
+
+	-----------------------------
+	uncomment 'listen_address' and change to <jboss ip>
+	-----------------------------------------------------
+
+22. systemctl restart postgresql
+
+23. netstat -ntlp (to check pgsql port)
+
+============================================================================
+
+configuration in JBOSS-EAP-7.2
+-----------------------------------------------
+
+1. DOWNLOAD postgresql jdbc driver accorf]ding to java version 
+
+	-----------------------------------------------
+	https://jdbc.postgresql.org/download/
+	----------------------------------------------------------------------
+
+2. copy driver in /opt/jboss-eap.1/modules/system/layers/base/org/postgres/main
+
+3. in same directory vim module.xml
+--------------------------------------
+
+<?xml version="1.0" encoding="UTF-8"?>
+<module xmlns="urn:jboss:module:1.1" name="org.postgres">
+    <resources>
+        <resource-root path="postgresql-42.6.0.jar"/>
+    </resources>
+    <dependencies>
+        <module name="javax.api"/>
+        <module name="javax.transaction.api"/>
+    </dependencies>
+</module>
+-------------------------------------------------------
+
+4. start jboss service
+
+5. in jboss/bin
+
+6. ./jboss-cli.sh --controller=192.168.174.129:9990 -u=redhat -p='redhat'  (uname & passwd is created using add-user.sh)
+
+7.  run:  module add --name=org.postgres --resources=/opt/postgresql-42.6.0.jar --dependencies=javax.api,javax.transaction.api
+
+
+8.  run : /subsystem=datasources/jdbc-driver=postgres:add(driver-module-name="org.postgres",driver-name="postgres",driver-xa-datasource-class-   name="org.postgresql.xa.PGXADataSource")
+
+9.  run : data-source add --jndi-name=java:jboss/datasources/PostgresDS --name=PostgresDS --driver-name=postgres --connection-url=jdbc:postgresql://192.168.174.129/emp --enabled=true --min-pool-size=5 --max-pool-size=20 --user-name=admin --password=redhat --use-java-	context=true
+
+10. exit from jboss-cli
+
+11. restart jboss-service
+
+12. open postgresql port(5432) using firewall command
+=========================================================================================================================================================
+CONFIGURING MYSQL DATABASE
+=========================================================
+1. install mysql and mysql-server
+
+2.create user database
+
+3. grant all privileges on db and user using query (grant all priviliges on db.* to 'unam'@'<jboss ip>)
+
+4. flush all privileges
+
+5. enter the client ip to my.cnf (/etc/my.cnf)
+
+6. open port of mysql
+
+7. on jboss side using cli.
+
+8

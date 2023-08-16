@@ -1,0 +1,21 @@
+APACHE HTTP configuration
+========================================
+1. donwalod apache http file from apache.org
+2. download apr-1.7 and apr-uutil.
+3. tar -xvzf apr & apr-util and move it into
+---------------------------------------------
+	mv apr-1.7. /opt/httpd-2.4.56/srclib/apr
+
+	mv apr-util-1.6.. /opt/httpd-2.4.56/srclib/apr-util
+-------------------------------------------------------------
+
+4. cd /opt/httpd-2.4.56:
+
+5. ./configure --prefix=/usr/local/apache2/ --with-included-apr=/opt/httpd-2.4.57
+
+6. make
+
+7. make install
+
+8. cd /usr/local/apache2
+------------------------------------------

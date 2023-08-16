@@ -1,0 +1,120 @@
+CONFIGURING apache mod_jk clustering in standalone jboss-eap-7.3.10 using TCP
+============================================================================================
+1.
+			NAME	port 	http	ajp	management	tcp	
+	jboss1		node1	0	8080	8009	9990		7600
+	jboss2		node2	100	8180	8109	10090		7700	
+	jboss3		node3	200	8280	8209	10190		7800
+
+	Apache-2.4
+	mod_jk
+2. install "tomcat-connectors-1.2.48-src.tar.gz"
+3. extract "tomcat-connectors-1.2.48-src.tar.gz" files using tar -xvzf <filename>
+4.chmod -R 775 file:"tomcat-connectors-1.2.48-src"
+5.open "standalone-ha.xml" & write server name as:
+	<server name="node1" xmlns="urn:jboss:domain:11.0"> & also in :
+	<subsystem xmlns="urn:jboss:domain:transactions:5.0">
+            <core-environment node-identifier="node1">					
+                <process-id>
+                    <uuid/>
+                </process-id>
+            </core-environment>
+6.under "tcp" protocol, write:
+	<stack name="tcp">
+                    <transport type="TCP" socket-binding="jgroups-tcp"/>
+                    <protocol type="org.jgroups.protocols.TCPPING">
+                        <property name="initiai-hosts">127.0.0.1[7600],127.0.0.1[7700]</property>
+                        <property name="port_range">0</property>
+                        <property name="timeout">2000</property>
+                    </protocol>
+7.now, copy the jboss-eap into 3 directories.
+8. change name to node2 and node3 respectively.
+9.start the standalone server on all 3 using:
+	./standalone.sh -c standalone-ha.xml
+10. on node 2 start server by aading :
+	-Djboss.socket.binding.port-offset=100
+11. on node3 start by adding:
+	-Djboss.socket.binding.port-offset=200
+12.deploy war files in all 3 nodes using :
+	cp -rv abc.war /opt/jboss-eap/standalone/deployments
+13.go to "/opt/tomcat-connectors-1.2.48-src/native" folders.
+14.run: 
+	./configure --with-apxs=/usr/local/apache2/bin/apxs ..........>(for apache2, u need to configure apache server)
+15.make
+16. make install
+17.mod_jk.so is located in :
+ 	/usr/local/apache2/modules/
+18. using "cd /usr/local/apache2/conf", vim httpd.conf and add following in last:
+................................................................................................................................	
+	#########################################################################################################################
+# Load mod_jk module
+LoadModule jk_module modules/mod_jk.so
+# Config file of mod_jk
+JkWorkersFile conf/workers.properties
+# Redirect all requests to 'worker1' node, which will be the JBOSSas server we installed.
+JkMount /* loadbalancer
+JkMount /status stat
+#Set mod_jk log level to 'debug',we'll check these debug info later
+JkLogLevel debug
+<Location /server-status>
+    SetHandler server-status
+    Order deny,allow
+    Allow from all
+    Require all granted
+</Location>
+............................................................................................
+19.in same path:
+ vi workers.properties:
+--------------------------------------------------------
+# Define list of workers that will be used
+# for mapping requests
+worker.list=loadbalancer,status
+
+# Define node1
+# modify the host as your host IP or DNS name.
+worker.node1.port=8009
+worker.node1.host=192.168.174.129
+worker.node1.type=ajp13
+worker.node1.lbfactor=1
+
+
+# Define node2
+# modify the host as your host IP or DNS name.
+worker.node2.port=8009
+worker.node2.host=192.168.174.132
+worker.node2.type=ajp13
+worker.node2.lbfactor=1
+
+
+# Load-balancing behavior
+worker.loadbalancer.type=lb
+worker.loadbalancer.balance_workers=node1,node2
+worker.loadbalancer.sticky_session=1
+
+#Status worker for managing load balancer
+worker.status.type=status
+--------------------------------------------------------
+20. in /usr/local/apache2/bin:
+	./apachectl start
+21. u can check log files in :
+  	/usr/local/apache2/logs
+22. in firefox:
+	127.0.0.1:80/server-status
+	127.0.0.1:80/httpsessionlogin
+	127.0.0.1:80/status
+
+23. vim standalone-ha.xml:
+	 <cache-container name="web" default-cache="dist" module="org.wildfly.clustering.web.infinispan">
+                <transport lock-timeout="60000"/>
+                <distributed-cache name="dist" owners="2">
+                    <locking isolation="REPEATABLE_READ"/>
+                    <transaction mode="BATCH"/>
+
+
+
+	 
+
+
+
+
+

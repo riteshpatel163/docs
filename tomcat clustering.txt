@@ -1,0 +1,57 @@
+APACHE TOMCAT CLUSTERING xconfiguration
+=====================================================
+1.Cluster Details:
+
+Node1: Base Directory = /root/tomcat1, IP = <>
+Node2: Base Directory = /root/tomcat2, IP = 1<>
+Node3: Base Directory = /root/tomcat3, IP = <>
+
+2.#On each node
+cd apache-tomcat-9.0.0.M17/             
+cp conf/server.xml conf/server.xml.bak  #Take a backup of the existing configuration file.
+
+3.#On each node
+ifconfig                #Get IP of the server.
+vim conf/server.xml     #Open configuration file to make the required configurations.
+
+4.<Engine name="Catalina" defaultHost="localhost"> 
+
+5. For setting up the cluster, search for the following code
+
+      <!--
+      <Cluster className="org.apache.catalina.ha.tcp.SimpleTcpCluster"/>
+      -->
+
+6.And add the following code on each node and replace [IP-Of-Node] with the IP of the node itself.
+==============================================================================================================================
+
+<Cluster className="org.apache.catalina.ha.tcp.SimpleTcpCluster" channelSendOptions="6">
+        <Manager className="org.apache.catalina.ha.session.DeltaManager" expireSessionsOnShutdown="false" notifyListenersOnReplication="true"/>
+        <Channel className="org.apache.catalina.tribes.group.GroupChannel">
+                <Membership className="org.apache.catalina.tribes.membership.McastService" address="228.0.0.4"
+                        port="45564" frequency="500" dropTime="3000"/>
+                <Receiver className="org.apache.catalina.tribes.transport.nio.NioReceiver" address="IP-Of-Node"
+                                port="5000" selectorTimeout="100" maxThreads="6"/>
+                <Sender className="org.apache.catalina.tribes.transport.ReplicationTransmitter">
+                                <Transport className="org.apache.catalina.tribes.transport.nio.PooledParallelSender"/>
+                </Sender>
+                <Interceptor className="org.apache.catalina.tribes.group.interceptors.TcpFailureDetector"/>
+                <Interceptor className="org.apache.catalina.tribes.group.interceptors.MessageDispatchInterceptor"/>
+                <Interceptor className="org.apache.catalina.tribes.group.interceptors.ThroughputInterceptor"/>
+        </Channel>
+        <Valve className="org.apache.catalina.ha.tcp.ReplicationValve" filter=""/>
+        <Valve className="org.apache.catalina.ha.session.JvmRouteBinderValve"/>
+        <Deployer className="org.apache.catalina.ha.deploy.FarmWarDeployer" tempDir="/tmp/war-temp/"
+                deployDir="/tmp/war-deploy/" watchDir="/tmp/war-listen/" watchEnabled="false"/>
+        <ClusterListener className="org.apache.catalina.ha.session.ClusterSessionListener"/>
+</Cluster>
+===============================================================================================================================
+
+7.#On each node
+bin/startup.sh 		#Start Apache Tomcat Service.
+netstat -tulpn 
+
+8. tail -100f logs/catalina.out
+.....................................
+
+9.
