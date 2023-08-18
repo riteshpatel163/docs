@@ -1,3 +1,4 @@
+ANSIBLE BASIC
 ## ansible all -m copy -a "src=    dest=  mode= ' -b --become-method(usename)
 ## for mmultiple command:
 	ansible hosts -m command -a 'uptime ; ll'
